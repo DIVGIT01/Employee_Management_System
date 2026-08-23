@@ -34,13 +34,13 @@ export const createEmployees = async (req, res)=>{
             password, role, bio} = req.body;
         
 
-            if(!email || !password || !firstName || !lastName ||){
+            if(!email || !password || !firstName || !lastName){
                 return res.status(400),json({error: "Missing required fields"});
             }
 
             const hashed = await bcrypt.hash(password, 10)
             const user = await User.create({
-                email;
+                email,
                 password: hashed,
                 role: role || "EMPLOYEE"
             })

@@ -21,6 +21,7 @@ app.use(multer().none())
 app.get("/", (req, res)=> res.send("Server is running"))
 app.use("/api/auth", authRouter)
 app.use("/api/employees", employeeRouter)
+app.use("/api/profile", profileRouter)
 app.use("/api/attendance", attendanceRouter)
 
 await connectDB()
