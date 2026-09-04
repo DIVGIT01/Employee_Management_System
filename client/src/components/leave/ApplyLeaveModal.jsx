@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import React, { useState } from "react";
+import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -13,23 +15,63 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
+
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+
+    const data = {
+      type: formData.get("type"),
+      startDate: formData.get("startDate"),
+      endDate: formData.get("endDate"),
+      reason: formData.get("reason"),
+    };
+
+    try {
+      const res = await api.post("/leave", data);
+
+      toast.success(
+        res.data?.message || "Leave application submitted successfully"
+      );
+
+      // Refresh leave history
+      if (onSuccess) {
+        await onSuccess();
+      }
+
+      // Close modal
+      onClose();
+    } catch (error) {
+      console.error("Leave submission error:", error);
+
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to submit leave request"
+      );
+    } finally {
+      // IMPORTANT: Always stop the submitting state
+      setLoading(false);
+    }
   };
 
-  // FIX: opent -> open
   if (!open) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 
       bg-black/40 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full
+        className="relative bg-white rounded-2xl shadow-2xl w-full 
         max-w-lg animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/*------Header------*/}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 pb-0">
           <div>
             <h2 className="text-lg font-semibold text-slate-800">
@@ -42,8 +84,9 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100
+            className="p-2 rounded-lg hover:bg-slate-100 
             transition-colors text-slate-400 hover:text-slate-600"
           >
             <X className="w-5 h-5" />
@@ -59,10 +102,16 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
             </label>
 
             <select
-              className="w-full px-4 py-3 border border-slate-200
+              name="type"
+              required
+              className="w-full px-4 py-3 border border-slate-200 
               rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+              defaultValue=""
             >
-              <option value="">Select Leave Type</option>
+              <option value="" disabled>
+                Select Leave Type
+              </option>
+
               <option value="SICK">Sick Leave</option>
               <option value="CASUAL">Casual Leave</option>
               <option value="ANNUAL">Annual Leave</option>
@@ -77,8 +126,10 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
 
             <input
               type="date"
+              name="startDate"
               min={minDate}
-              className="w-full px-4 py-3 border border-slate-200
+              required
+              className="w-full px-4 py-3 border border-slate-200 
               rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -91,8 +142,10 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
 
             <input
               type="date"
+              name="endDate"
               min={minDate}
-              className="w-full px-4 py-3 border border-slate-200
+              required
+              className="w-full px-4 py-3 border border-slate-200 
               rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -104,10 +157,12 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
             </label>
 
             <textarea
+              name="reason"
               rows="3"
+              required
               placeholder="Enter reason for leave..."
-              className="w-full px-4 py-3 border border-slate-200
-              rounded-lg outline-none resize-none
+              className="w-full px-4 py-3 border border-slate-200 
+              rounded-lg outline-none resize-none 
               focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -117,8 +172,9 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-lg border border-slate-200
-              text-slate-600 hover:bg-slate-50"
+              disabled={loading}
+              className="px-5 py-2.5 rounded-lg border border-slate-200 
+              text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -126,7 +182,7 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary px-5 py-2.5"
+              className="btn-primary px-5 py-2.5 disabled:opacity-60"
             >
               {loading ? "Submitting..." : "Submit Request"}
             </button>

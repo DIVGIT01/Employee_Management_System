@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DEPARTMENTS } from "../assets/assets";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
   const navigate = useNavigate();
@@ -15,13 +17,45 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
     setLoading(true);
 
     try {
-      // Add your API call here later
+      // Convert form values into a normal JavaScript object
+      // instead of sending FormData.
+      const formData = new FormData(e.currentTarget);
+      const data = Object.fromEntries(formData.entries());
+
+      // When editing, an empty password means:
+      // keep the existing password unchanged.
+      if (isEditMode && !data.password) {
+        delete data.password;
+      }
+
+      const url = isEditMode
+        ? `/employees/${initialData.id}`
+        : "/employees";
+
+      const method = isEditMode ? "put" : "post";
+
+      await api[method](url, data);
+
+      toast.success(
+        isEditMode
+          ? "Employee updated successfully"
+          : "Employee created successfully"
+      );
 
       if (onSuccess) {
         onSuccess();
+      } else {
+        navigate("/employees");
       }
     } catch (error) {
-      console.error("Error saving employee:", error);
+      console.error("Employee save error:", error);
+
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to save employee"
+      );
     } finally {
       setLoading(false);
     }
@@ -33,7 +67,10 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
         onSubmit={handleSubmit}
         className="space-y-6 max-w-3xl animate-fade-in"
       >
-        {/* Personal Information */}
+        {/* =====================================================
+            PERSONAL INFORMATION
+        ====================================================== */}
+
         <div className="card p-5 sm:p-6">
           <h3 className="font-medium mb-6 pb-4 border-b border-slate-100">
             Personal Information
@@ -43,7 +80,10 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* First Name */}
             <div>
-              <label className="block mb-2">First Name</label>
+              <label className="block mb-2">
+                First Name
+              </label>
+
               <input
                 name="firstName"
                 required
@@ -53,7 +93,10 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Last Name */}
             <div>
-              <label className="block mb-2">Last Name</label>
+              <label className="block mb-2">
+                Last Name
+              </label>
+
               <input
                 name="lastName"
                 required
@@ -63,7 +106,10 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Phone */}
             <div>
-              <label className="block mb-2">Phone Number</label>
+              <label className="block mb-2">
+                Phone Number
+              </label>
+
               <input
                 name="phone"
                 required
@@ -73,7 +119,10 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Join Date */}
             <div>
-              <label className="block mb-2">Join Date</label>
+              <label className="block mb-2">
+                Join Date
+              </label>
+
               <input
                 type="date"
                 name="joinDate"
@@ -90,7 +139,9 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Bio */}
             <div className="sm:col-span-2">
-              <label className="block mb-2">Bio (Optional)</label>
+              <label className="block mb-2">
+                Bio (Optional)
+              </label>
 
               <textarea
                 name="bio"
@@ -102,7 +153,10 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
           </div>
         </div>
 
-        {/* Employment Details */}
+        {/* =====================================================
+            EMPLOYMENT DETAILS
+        ====================================================== */}
+
         <div className="card p-5 sm:p-6">
           <h3 className="text-base font-medium text-slate-900 mb-6 pb-4 border-b border-slate-100">
             Employment Details
@@ -112,16 +166,23 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Department */}
             <div>
-              <label className="block mb-2">Department</label>
+              <label className="block mb-2">
+                Department
+              </label>
 
               <select
                 name="department"
                 defaultValue={initialData?.department || ""}
               >
-                <option value="">Select Department</option>
+                <option value="">
+                  Select Department
+                </option>
 
                 {DEPARTMENTS.map((deptName) => (
-                  <option key={deptName} value={deptName}>
+                  <option
+                    key={deptName}
+                    value={deptName}
+                  >
                     {deptName}
                   </option>
                 ))}
@@ -130,7 +191,9 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Position */}
             <div>
-              <label className="block mb-2">Position</label>
+              <label className="block mb-2">
+                Position
+              </label>
 
               <input
                 name="position"
@@ -141,7 +204,9 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Basic Salary */}
             <div>
-              <label className="block mb-2">Basic Salary</label>
+              <label className="block mb-2">
+                Basic Salary
+              </label>
 
               <input
                 type="number"
@@ -149,13 +214,17 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
                 required
                 min="0"
                 step="0.01"
-                defaultValue={initialData?.basicSalary || 0}
+                defaultValue={
+                  initialData?.basicSalary ?? 0
+                }
               />
             </div>
 
             {/* Allowances */}
             <div>
-              <label className="block mb-2">Allowances</label>
+              <label className="block mb-2">
+                Allowances
+              </label>
 
               <input
                 type="number"
@@ -163,13 +232,17 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
                 min="0"
                 step="0.01"
                 required
-                defaultValue={initialData?.allowance || 0}
+                defaultValue={
+                  initialData?.allowances ?? 0
+                }
               />
             </div>
 
             {/* Deductions */}
             <div>
-              <label className="block mb-2">Deductions</label>
+              <label className="block mb-2">
+                Deductions
+              </label>
 
               <input
                 type="number"
@@ -177,30 +250,43 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
                 min="0"
                 step="0.01"
                 required
-                defaultValue={initialData?.deductions || 0}
+                defaultValue={
+                  initialData?.deductions ?? 0
+                }
               />
             </div>
 
             {/* Status */}
             {isEditMode && (
               <div>
-                <label className="block mb-2">Status</label>
+                <label className="block mb-2">
+                  Status
+                </label>
 
                 <select
                   name="employmentStatus"
                   defaultValue={
-                    initialData?.employmentStatus || "ACTIVE"
+                    initialData?.employmentStatus ||
+                    "ACTIVE"
                   }
                 >
-                  <option value="ACTIVE">Active</option>
-                  <option value="INACTIVE">Inactive</option>
+                  <option value="ACTIVE">
+                    Active
+                  </option>
+
+                  <option value="INACTIVE">
+                    Inactive
+                  </option>
                 </select>
               </div>
             )}
           </div>
         </div>
 
-        {/* Account Setup */}
+        {/* =====================================================
+            ACCOUNT SETUP
+        ====================================================== */}
+
         <div className="card p-5 sm:p-6">
           <h3 className="text-base font-medium text-slate-900 mb-6 pb-4 border-b border-slate-100">
             Account Setup
@@ -210,7 +296,9 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
 
             {/* Work Email */}
             <div className="sm:col-span-2">
-              <label className="block mb-2">Work Email</label>
+              <label className="block mb-2">
+                Work Email
+              </label>
 
               <input
                 type="email"
@@ -220,35 +308,55 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
               />
             </div>
 
-            {/* Change Password */}
+            {/* Password */}
             <div>
               <label className="block mb-2">
-                Change Password (Optional)
+                {isEditMode
+                  ? "Change Password (Optional)"
+                  : "Password"}
               </label>
 
               <input
                 type="password"
                 name="password"
-                placeholder="Leave blank to keep current"
+                placeholder={
+                  isEditMode
+                    ? "Leave blank to keep current"
+                    : "Enter password"
+                }
+                required={!isEditMode}
               />
             </div>
 
             {/* System Role */}
             <div>
-              <label className="block mb-2">System Role</label>
+              <label className="block mb-2">
+                System Role
+              </label>
 
               <select
                 name="role"
-                defaultValue={initialData?.user?.role || "EMPLOYEE"}
+                defaultValue={
+                  initialData?.user?.role ||
+                  "EMPLOYEE"
+                }
               >
-                <option value="EMPLOYEE">Employee</option>
-                <option value="ADMIN">Admin</option>
+                <option value="EMPLOYEE">
+                  Employee
+                </option>
+
+                <option value="ADMIN">
+                  Admin
+                </option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* =====================================================
+            BUTTONS
+        ====================================================== */}
+
         <div className="flex justify-end gap-3 pb-6">
 
           <button
@@ -271,7 +379,6 @@ const EmployeeForm = ({ initialData, onSuccess, onCancel }) => {
               ? "Update Employee"
               : "Create Employee"}
           </button>
-
         </div>
       </form>
     </div>
