@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { dummyPayslipData } from "../assets/assets";
 import Loading from "../components/Loading";
 import { format } from "date-fns";
+import api from "../api/axios";
 
 const PrintPayslip = () => {
   const { id } = useParams();
@@ -10,15 +11,15 @@ const PrintPayslip = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const foundPayslip = dummyPayslipData.find(
-      (payslip) => payslip._id === id
-    );
-
-    setPayslip(foundPayslip);
-
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    api.get(`/payslips/${id}`)
+      .then((res) => {
+        setPayslip(res.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching payslip:", error);
+        setLoading(false);
+      });
   }, [id]);
 
   if (loading) return <Loading />;

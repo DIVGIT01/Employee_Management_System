@@ -1,12 +1,16 @@
 import React from "react";
 
 const AttendanceHistory = ({ history = [] }) => {
-
   const getDayType = (record) => {
     if (record.dayType) {
       return {
         label: record.dayType,
-        className: "badge badge-success",
+        className:
+          record.dayType === "Full Day"
+            ? "badge badge-success"
+            : record.dayType === "Half Day"
+            ? "badge badge-warning"
+            : "badge",
       };
     }
 
@@ -27,35 +31,11 @@ const AttendanceHistory = ({ history = [] }) => {
       };
     }
 
-    const checkIn = record.checkIn || record.CheckIn;
-    const checkOut = record.checkOut || record.CheckOut;
-
-    if (checkIn && checkOut) {
-      const workingHours =
-        (new Date(checkOut) - new Date(checkIn)) /
-        (1000 * 60 * 60);
-
-      if (workingHours >= 8) {
-        return {
-          label: "Full Day",
-          className: "badge badge-success",
-        };
-      }
-
-      if (workingHours >= 4) {
-        return {
-          label: "Half Day",
-          className: "badge badge-warning",
-        };
-      }
-    }
-
     return {
       label: "Workday",
       className: "badge",
     };
   };
-
 
   const formatTime = (time) => {
     if (!time) return "--";
@@ -66,66 +46,69 @@ const AttendanceHistory = ({ history = [] }) => {
         minute: "2-digit",
       });
     } catch {
-      return time;
+      return "--";
     }
   };
 
-
   const getWorkingHoursDisplay = (record) => {
-    const checkIn = record.checkIn || record.CheckIn;
-    const checkOut = record.checkOut || record.CheckOut;
+    if (
+      record.workingHours !== undefined &&
+      record.workingHours !== null
+    ) {
+      const hours = Number(record.workingHours);
+
+      if (!isNaN(hours)) {
+        const wholeHours = Math.floor(hours);
+        const minutes = Math.round((hours - wholeHours) * 60);
+
+        return `${wholeHours}h ${minutes}m`;
+      }
+    }
+
+    const checkIn = record.checkIn;
+    const checkOut = record.checkOut;
 
     if (!checkIn || !checkOut) {
       return "--";
     }
 
-    try {
-      const start = new Date(checkIn);
-      const end = new Date(checkOut);
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
 
-      const difference = end - start;
+    const difference = end - start;
 
-      if (difference <= 0) {
-        return "--";
-      }
-
-      const totalMinutes = Math.floor(
-        difference / (1000 * 60)
-      );
-
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-
-      return `${hours}h ${minutes}m`;
-    } catch {
+    if (difference <= 0) {
       return "--";
     }
+
+    const totalMinutes = Math.floor(
+      difference / (1000 * 60)
+    );
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return `${hours}h ${minutes}m`;
   };
 
-
   const getStatus = (record) => {
-    const checkIn = record.checkIn || record.CheckIn;
-    const checkOut = record.checkOut || record.CheckOut;
-
     if (record.status) {
       return record.status;
     }
 
-    if (checkOut) {
+    if (record.checkOut) {
       return "PRESENT";
     }
 
-    if (record.isCheckedIn || checkIn) {
+    if (record.checkIn) {
       return "PRESENT";
     }
 
     return "ABSENT";
   };
 
-
   return (
     <div className="card overflow-hidden mt-6">
-
       {/* Header */}
       <div className="p-6 border-b border-slate-100">
         <h3 className="font-semibold text-slate-900">
@@ -137,14 +120,11 @@ const AttendanceHistory = ({ history = [] }) => {
         </p>
       </div>
 
-
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="table-modern w-full">
-
           <thead>
             <tr>
-
               <th className="px-6 py-4 text-left">
                 Date
               </th>
@@ -168,15 +148,11 @@ const AttendanceHistory = ({ history = [] }) => {
               <th className="px-6 py-4 text-left">
                 Status
               </th>
-
             </tr>
           </thead>
 
-
           <tbody>
-
             {history.length === 0 ? (
-
               <tr>
                 <td
                   colSpan={6}
@@ -185,19 +161,9 @@ const AttendanceHistory = ({ history = [] }) => {
                   No Record Found
                 </td>
               </tr>
-
             ) : (
-
               history.map((record) => {
-
-                const checkIn =
-                  record.checkIn || record.CheckIn;
-
-                const checkOut =
-                  record.checkOut || record.CheckOut;
-
                 const dayType = getDayType(record);
-
                 const status = getStatus(record);
 
                 return (
@@ -205,55 +171,41 @@ const AttendanceHistory = ({ history = [] }) => {
                     key={record._id || record.id}
                     className="border-t border-slate-100"
                   >
-
                     {/* Date */}
                     <td className="px-6 py-4 font-medium text-slate-900">
-                      {new Date(record.date).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "2-digit",
-                          year: "numeric",
-                        }
-                      )}
+                      {new Date(
+                        record.date
+                      ).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "2-digit",
+                        year: "numeric",
+                      })}
                     </td>
-
 
                     {/* Check In */}
                     <td className="px-6 py-4 text-slate-600">
-                      {formatTime(checkIn)}
+                      {formatTime(record.checkIn)}
                     </td>
-
 
                     {/* Check Out */}
                     <td className="px-6 py-4 text-slate-600">
-                      {formatTime(checkOut)}
+                      {formatTime(record.checkOut)}
                     </td>
-
 
                     {/* Working Hours */}
                     <td className="px-6 py-4 text-slate-600 font-medium">
                       {getWorkingHoursDisplay(record)}
                     </td>
 
-
                     {/* Day Type */}
                     <td className="px-6 py-4">
-
-                      {dayType.label !== "-" ? (
-                        <span className={dayType.className}>
-                          {dayType.label}
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-
+                      <span className={dayType.className}>
+                        {dayType.label}
+                      </span>
                     </td>
-
 
                     {/* Status */}
                     <td className="px-6 py-4">
-
                       <span
                         className={`badge ${
                           status === "PRESENT"
@@ -267,20 +219,14 @@ const AttendanceHistory = ({ history = [] }) => {
                       >
                         {status}
                       </span>
-
                     </td>
-
                   </tr>
                 );
               })
-
             )}
-
           </tbody>
-
         </table>
       </div>
-
     </div>
   );
 };

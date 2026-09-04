@@ -94,30 +94,16 @@ export const createEmployees = async (req, res) => {
       email: normalizedEmail,
     });
 
-    // =================================================
-    // EXISTING USER FOUND
-    // =================================================
-
     if (existingUser) {
-      // Check whether this user already has an employee profile
       const existingEmployee = await Employee.findOne({
         userId: existingUser._id,
       });
-
-      // -----------------------------------------------
-      // ACTIVE EMPLOYEE ALREADY EXISTS
-      // -----------------------------------------------
 
       if (existingEmployee && !existingEmployee.isDeleted) {
         return res.status(400).json({
           error: "Email already exists",
         });
       }
-
-      // -----------------------------------------------
-      // SOFT-DELETED EMPLOYEE FOUND
-      // RESTORE THE EXISTING EMPLOYEE
-      // -----------------------------------------------
 
       if (existingEmployee && existingEmployee.isDeleted) {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -132,20 +118,13 @@ export const createEmployees = async (req, res) => {
         existingEmployee.email = normalizedEmail;
         existingEmployee.phone = phone;
         existingEmployee.position = position;
-        existingEmployee.department =
-          department || "Engineering";
+        existingEmployee.department = department || "Engineering";
 
-        existingEmployee.basicSalary =
-          Number(basicSalary) || 0;
-
-        existingEmployee.allowances =
-          Number(allowances) || 0;
-
-        existingEmployee.deductions =
-          Number(deductions) || 0;
+        existingEmployee.basicSalary = Number(basicSalary) || 0;
+        existingEmployee.allowances = Number(allowances) || 0;
+        existingEmployee.deductions = Number(deductions) || 0;
 
         existingEmployee.joinDate = new Date(joinDate);
-
         existingEmployee.bio = bio || "";
 
         existingEmployee.employmentStatus = "ACTIVE";
@@ -163,10 +142,6 @@ export const createEmployees = async (req, res) => {
           },
         });
       }
-
-      // -----------------------------------------------
-      // USER EXISTS BUT EMPLOYEE DOES NOT
-      // -----------------------------------------------
 
       return res.status(400).json({
         error: "Email already exists",
@@ -223,18 +198,20 @@ export const createEmployees = async (req, res) => {
         },
       });
     } catch (employeeError) {
-      // If employee creation fails,
-      // delete the newly-created user.
       await User.findByIdAndDelete(user._id);
-
       throw employeeError;
     }
   } catch (error) {
     console.error("Create employee error:", error);
 
     if (error.code === 11000) {
+      const field =
+        Object.keys(error.keyPattern || {})[0] ||
+        Object.keys(error.keyValue || {})[0] ||
+        "field";
+
       return res.status(400).json({
-        error: "Email already exists",
+        error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
       });
     }
 
@@ -280,10 +257,6 @@ export const updateEmployees = async (req, res) => {
 
     const normalizedEmail = email?.trim().toLowerCase();
 
-    // =================================================
-    // CHECK EMAIL CONFLICT
-    // =================================================
-
     if (
       normalizedEmail &&
       normalizedEmail !== employee.email.toLowerCase()
@@ -299,10 +272,6 @@ export const updateEmployees = async (req, res) => {
         });
       }
     }
-
-    // =================================================
-    // UPDATE EMPLOYEE
-    // =================================================
 
     if (firstName !== undefined) {
       employee.firstName = firstName.trim();
@@ -346,10 +315,6 @@ export const updateEmployees = async (req, res) => {
 
     await employee.save();
 
-    // =================================================
-    // UPDATE USER
-    // =================================================
-
     const userUpdate = {};
 
     if (normalizedEmail) {
@@ -365,11 +330,9 @@ export const updateEmployees = async (req, res) => {
     }
 
     if (Object.keys(userUpdate).length > 0) {
-      await User.findByIdAndUpdate(
-        employee.userId,
-        userUpdate,
-        { new: true }
-      );
+      await User.findByIdAndUpdate(employee.userId, userUpdate, {
+        new: true,
+      });
     }
 
     return res.json({
@@ -380,8 +343,13 @@ export const updateEmployees = async (req, res) => {
     console.error("Update employee error:", error);
 
     if (error.code === 11000) {
+      const field =
+        Object.keys(error.keyPattern || {})[0] ||
+        Object.keys(error.keyValue || {})[0] ||
+        "field";
+
       return res.status(400).json({
-        error: "Email already exists",
+        error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
       });
     }
 
@@ -408,7 +376,6 @@ export const deleteEmployees = async (req, res) => {
       });
     }
 
-    // Soft delete
     employee.isDeleted = true;
     employee.employmentStatus = "INACTIVE";
 

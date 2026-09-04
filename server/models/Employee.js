@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { DEPARTMENTS } from "../constants/departments.js";
 
 const employeeSchema = new mongoose.Schema(
   {
@@ -7,92 +6,23 @@ const employeeSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
     },
-
-    firstName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-    },
-
-    phone: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    position: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    department: {
-      type: String,
-      enum: DEPARTMENTS,
-      default: "Engineering",
-    },
-
-    basicSalary: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-
-    allowances: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-
-    deductions: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-
-    employmentStatus: {
-      type: String,
-      enum: ["ACTIVE", "INACTIVE"],
-      default: "ACTIVE",
-    },
-
-    joinDate: {
-      type: Date,
-      required: true,
-    },
-
-    isDeleted: {
-      type: Boolean,
-      default: false,
-    },
-
-    bio: {
-      type: String,
-      default: "",
-    },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    phone: { type: String, required: true, unique: true },
+    position: { type: String, required: true },
+    department: { type: String, default: "Engineering" },
+    basicSalary: { type: Number, default: 0 },
+    allowances: { type: Number, default: 0 },
+    deductions: { type: Number, default: 0 },
+    joinDate: { type: Date, required: true },
+    bio: { type: String, default: "" },
+    employmentStatus: { type: String, default: "ACTIVE" },
+    isDeleted: { type: Boolean, default: false },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Employee =
-  mongoose.models.Employee ||
-  mongoose.model("Employee", employeeSchema);
-
+const Employee = mongoose.model("Employee", employeeSchema);
 export default Employee;

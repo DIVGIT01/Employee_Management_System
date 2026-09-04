@@ -29,6 +29,11 @@ const PayslipList = ({ payslips, isAdmin }) => {
               </tr>
             ) : (
               payslips.map((payslip) => {
+                const periodDate = new Date(payslip.year, payslip.month - 1);
+                const periodLabel = isNaN(periodDate.getTime())
+                  ? "Unknown period"
+                  : format(periodDate, "MMMM yyyy");
+
                 return (
                   <tr key={payslip._id || payslip.id}>
                     {isAdmin && (
@@ -38,15 +43,7 @@ const PayslipList = ({ payslips, isAdmin }) => {
                       </td>
                     )}
 
-                    <td className="text-slate-500">
-                      {format(
-                        new Date(
-                          payslip.year,
-                          payslip.month - 1
-                        ),
-                        "MMMM yyyy"
-                      )}
-                    </td>
+                    <td className="text-slate-500">{periodLabel}</td>
 
                     <td className="text-slate-500">
                       ${payslip.basicSalary?.toLocaleString()}

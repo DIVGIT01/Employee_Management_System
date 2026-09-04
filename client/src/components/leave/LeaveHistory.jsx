@@ -1,22 +1,48 @@
 import { Check, Loader2, X } from "lucide-react";
 import React, { useState } from "react";
 import { format } from "date-fns";
+import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
   const [processing, setProcessing] = useState(null);
 
   const handleStatusUpdate = async (id, status) => {
+    if (!id) {
+      toast.error("Leave application ID not found");
+      return;
+    }
+
     setProcessing(id);
 
     try {
-      // Simulate API request
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      console.log("Updating leave:", id, status);
 
+      const response = await api.patch(`/leave/${id}`, {
+        status,
+      });
+
+      console.log("Leave status updated:", response.data);
+
+      toast.success(
+        status === "APPROVED"
+          ? "Leave approved successfully"
+          : "Leave rejected successfully"
+      );
+
+      // Refresh leave list
       if (onUpdate) {
-        onUpdate();
+        await onUpdate();
       }
     } catch (error) {
-      console.error("Failed to update leave status:", error);
+      console.error("Leave status update error:", error);
+
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to update leave status"
+      );
     } finally {
       setProcessing(null);
     }
@@ -24,21 +50,15 @@ const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
 
   return (
     <div className="card overflow-hidden mt-6">
-
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="table-modern w-full">
-
           <thead>
             <tr>
               {isAdmin && <th>Employee</th>}
 
               <th>Type</th>
-
               <th>Dates</th>
-
               <th>Reason</th>
-
               <th>Status</th>
 
               {isAdmin && (
@@ -50,9 +70,7 @@ const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
           </thead>
 
           <tbody>
-
             {leaves.length === 0 ? (
-
               <tr>
                 <td
                   colSpan={isAdmin ? 6 : 5}
@@ -61,11 +79,8 @@ const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
                   No leave applications found!
                 </td>
               </tr>
-
             ) : (
-
               leaves.map((leave) => {
-
                 const leaveId = leave._id || leave.id;
 
                 return (
@@ -73,12 +88,13 @@ const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
                     key={leaveId}
                     className="border-t border-slate-100"
                   >
-
                     {/* Employee */}
                     {isAdmin && (
                       <td className="px-6 py-4 text-slate-900">
-                        {leave.employee?.firstName}{" "}
-                        {leave.employee?.lastName}
+                        {leave.employee?.firstName ||
+                          leave.employeeId?.firstName}{" "}
+                        {leave.employee?.lastName ||
+                          leave.employeeId?.lastName}
                       </td>
                     )}
 
@@ -125,22 +141,25 @@ const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
                       </span>
                     </td>
 
-                    {/* Admin Actions */}
+                    {/* Actions */}
                     {isAdmin && (
                       <td className="px-6 py-4">
                         {leave.status === "PENDING" && (
                           <div className="flex justify-center gap-2">
-
-                            {/* Approve */}
+                            {/* APPROVE */}
                             <button
-                              disabled={!!processing}
+                              type="button"
+                              disabled={processing !== null}
                               onClick={() =>
                                 handleStatusUpdate(
                                   leaveId,
                                   "APPROVED"
                                 )
                               }
-                              className="p-1.5 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-200 transition-colors"
+                              className="p-2 rounded-md bg-emerald-50 
+                              text-emerald-700 hover:bg-emerald-200 
+                              transition-colors disabled:opacity-50"
+                              title="Approve Leave"
                             >
                               {processing === leaveId ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -149,16 +168,20 @@ const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
                               )}
                             </button>
 
-                            {/* Reject */}
+                            {/* REJECT */}
                             <button
-                              disabled={!!processing}
+                              type="button"
+                              disabled={processing !== null}
                               onClick={() =>
                                 handleStatusUpdate(
                                   leaveId,
                                   "REJECTED"
                                 )
                               }
-                              className="p-1.5 rounded-md bg-rose-50 text-rose-600 hover:bg-rose-200 transition-colors"
+                              className="p-2 rounded-md bg-rose-50 
+                              text-rose-600 hover:bg-rose-200 
+                              transition-colors disabled:opacity-50"
+                              title="Reject Leave"
                             >
                               {processing === leaveId ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -166,23 +189,17 @@ const LeaveHistory = ({ leaves = [], isAdmin, onUpdate }) => {
                                 <X className="w-4 h-4" />
                               )}
                             </button>
-
                           </div>
                         )}
                       </td>
                     )}
-
                   </tr>
                 );
               })
-
             )}
-
           </tbody>
-
         </table>
       </div>
-
     </div>
   );
 };

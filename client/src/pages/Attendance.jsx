@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { dummyAttendanceData } from "../assets/assets";
 import Loading from "../components/Loading";
 import CheckInButton from "../components/attendance/CheckInButton";
 import AttendanceStats from "../components/attendance/AttendanceStats";
 import AttendanceHistory from "../components/attendance/AttendanceHistory";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 const Attendance = () => {
   const [history, setHistory] = useState([]);
@@ -11,11 +12,31 @@ const Attendance = () => {
   const [isDeleted, setIsDeleted] = useState(false);
 
   const fetchData = useCallback(async () => {
-    setHistory(dummyAttendanceData);
+    try {
+      const res = await api.get("/attendance");
 
-    setTimeout(() => {
+      const json = res.data;
+
+      console.log("Attendance response:", json);
+
+      // Backend returns { data: history }
+      setHistory(Array.isArray(json?.data) ? json.data : []);
+
+      setIsDeleted(Boolean(json?.employee?.isDeleted));
+    } catch (error) {
+      console.error("Attendance fetch error:", error);
+
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch attendance data"
+      );
+
+      setHistory([]);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   }, []);
 
   useEffect(() => {
@@ -29,10 +50,14 @@ const Attendance = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const todayRecord = history.find(
-    (r) =>
-      new Date(r.date).toDateString() === today.toDateString()
-  );
+  const todayRecord = history.find((record) => {
+    if (!record?.date) return false;
+
+    return (
+      new Date(record.date).toDateString() ===
+      today.toDateString()
+    );
+  });
 
   return (
     <div className="animate-fade">
@@ -63,8 +88,10 @@ const Attendance = () => {
         />
       )}
 
+      {/* Statistics */}
       <AttendanceStats history={history} />
 
+      {/* History */}
       <AttendanceHistory history={history} />
     </div>
   );
