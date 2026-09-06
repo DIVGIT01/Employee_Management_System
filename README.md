@@ -33,9 +33,11 @@ This repo covers the complete implementation: authentication, employee CRUD with
 
 ### Video Walkthroughs
 
-- 🎥 [Admin Portal Demo](./screenshots/QuickEMS-ADMIN.mp4)
-- 🎥 [Employee Portal Demo](./screenshots/QuickEMS-EMPLOYEE.mp4)
+#### Admin Portal Demo
+<video src="./screenshots/QuickEMS-ADMIN.mp4" controls="controls" width="100%"></video>
 
+#### Employee Portal Demo
+<video src="./screenshots/QuickEMS-EMPLOYEE.mp4" controls="controls" width="100%"></video>
 ### Screenshots
 
 | Login Portal | Admin Dashboard | Employee Dashboard |
