@@ -33,8 +33,8 @@ This repo covers the complete implementation: authentication, employee CRUD with
 
 ### Video Walkthroughs
 
-- 🎥 [Admin Portal Demo](./screenshots/QuickEMS%20-%20ADMIN.mp4)
-- 🎥 [Employee Portal Demo](./screenshots/QuickEMS%20-%20EMPLOYEE.mp4)
+- 🎥 [Admin Portal Demo](./screenshots/QuickEMS-ADMIN.mp4)
+- 🎥 [Employee Portal Demo](./screenshots/QuickEMS-EMPLOYEE.mp4)
 
 ### Screenshots
 
